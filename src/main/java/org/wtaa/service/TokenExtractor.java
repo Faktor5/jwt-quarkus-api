@@ -3,11 +3,13 @@ package org.wtaa.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.core.SecurityContext;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.wtaa.model.token;
 
 @RequestScoped
 public class TokenExtractor {
@@ -174,6 +176,14 @@ public class TokenExtractor {
         System.out.println("TokenExtractor getName");
 
         return name;
+    }
+
+    public Optional<String> getClaim(String claim) {
+                
+        System.out.println("TokenExtractor getClaim");
+
+        return Optional.of(claims)
+            .map(claims -> claims.get(claim));
     }
     // #endregion
 

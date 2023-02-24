@@ -5,64 +5,106 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
+import javax.enterprise.context.ApplicationScoped;
+import org.wtaa.model.user;
 
-@RequestScoped
+@ApplicationScoped
 public class AccountManager {
     public Set<user> accounts;
     private Map<String, List<user>> role_mapping;
-    public List<String> roles;
 
-    @Inject
-    private Encoder encoder;
+    Encoder encoder;
 
-    public AccountManager() {
-        accounts = new HashSet<>();
-        roles = List.of("admin", "user", "guest");
-        role_mapping = new HashMap<>();
+    public AccountManager(Encoder encoder) {
+        
+        this.encoder = encoder;
 
-        role_mapping.put("admin", new ArrayList<user>());
-        role_mapping.put("user", new ArrayList<user>());
-        role_mapping.put("guest", new ArrayList<user>());
-
-        initializeAccounts();
+        accounts = createUser(
+        "admin",
+            "amin",
+            "nima",
+            "anon");
+        
+        role_mapping = createRoles(
+            "admin",
+            "user",
+            "guest");
     }
 
-    private void initializeAccounts() {
-        accounts.add(new user("admin", (hashed("admin"))));
-        accounts.add(new user("amin", (hashed("amin"))));
-        accounts.add(new user("nima", (hashed("nima"))));
-        accounts.add(new user("anon", (hashed("anon"))));
+    private HashMap<String, List<user>> createRoles(String... roles) {
+        return List.of(roles)
+                .stream()
+                .collect(HashMap::new, (map, role) -> map.put(role, getUserPerRole(role)), HashMap::putAll);
+    }
 
-        role_mapping.get("admin").add(accounts.stream().filter(u -> u.name().equals("admin")).findFirst().get());
-        role_mapping.get("admin").add(accounts.stream().filter(u -> u.name().equals("amin")).findFirst().get());
+    private List<user> getUserPerRole(String role) {
+        return getUserNamesPerRole(role)
+                .stream()
+                .map(this::getUserByName)
+                .filter(this::userIsNotNull)
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    }
 
-        role_mapping.get("user").add(accounts.stream().filter(u -> u.name().equals("nima")).findFirst().get());
+    private List<String> getUserNamesPerRole(String role) {
+        return switch (role) {
+            case "admin" -> List.of("admin", "amin");
+            case "user" -> List.of("nima");
+            case "guest" -> List.of("anon");
+            default -> List.of();
+        };
+    }
 
-        role_mapping.get("guest").add(accounts.stream().filter(u -> u.name().equals("anon")).findFirst().get());
+    private Set<user> createUser(String... users) {
+        return List.of(users)
+                .stream()
+                .map(this::createUserFromName)
+                .collect(HashSet::new, HashSet::add, HashSet::addAll);
+    }
+
+    private user createUserFromName(String name) {
+        return 
+            new user(
+                name,
+                hashed(name)
+            );
     }
 
     private String hashed(String in) {
-        return encoder.encode(in);
+        return
+        Optional.of(encoder)
+                .orElseGet(Encoder::new)
+                .encodeBase64(in);
     }
 
     public user login(String user, String pass) {
         return accounts
-            .stream()
-            .filter(u -> u.name().equals(user) && u.password().equals(hashed(pass)))
-            .findFirst()
-            .orElse(null);
+                .stream()
+                .filter(u -> u.name().equals(user) && u.password().equals(hashed(pass)))
+                .findFirst()
+                .orElse(null);
     }
 
     public Set<String> getRoles(user valid) {
         return role_mapping
-            .entrySet()
-            .stream()
-            .filter(e -> e.getValue().contains(valid))
-            .map(Map.Entry::getKey)
-            .collect(HashSet::new, HashSet::add, HashSet::addAll);
+                .entrySet()
+                .stream()
+                .filter(e -> e.getValue().contains(valid))
+                .map(Map.Entry::getKey)
+                .collect(HashSet::new, HashSet::add, HashSet::addAll);
+    }
+
+    private boolean userIsNotNull(user u) {
+        return u != null;
+    }
+
+    private user getUserByName(String name) {
+        return accounts
+                .stream()
+                .filter(u -> u.name().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 }
