@@ -53,12 +53,12 @@ public class UserAuthentication {
         else
             return Response
                     .ok(
-                            Jwt
-                                    .issuer("https://wtaa.org")
-                                    .upn(valid.name())
-                                    .groups(accountManager.getRoles(valid))
-                                    .claim("Login Data", valid.content())
-                                    .sign())
+                        Jwt
+                        .issuer("https://wtaa.org")
+                        .upn(valid.name())
+                        .groups(accountManager.getRoles(valid))
+                        .claim("Login Data", valid.content())
+                        .sign())
                     .build();
     }
 

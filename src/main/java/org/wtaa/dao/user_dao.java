@@ -4,7 +4,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.wtaa.domain.*;
@@ -15,6 +18,24 @@ public class user_dao {
 
     public user_dao(Connection conn) {
         this.conn = conn;
+    }
+
+    public List<String> names() {
+        String query = "SELECT name FROM user";
+        List<String> names = new ArrayList<>();
+
+        try (
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(query)
+        ) {
+            while (rs.next())
+                names.add(rs.getString("name"));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return names;
     }
 
     public Set<user> select() {
@@ -33,7 +54,7 @@ public class user_dao {
                         rs.getString("pass")));
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
 
         return users;
@@ -57,5 +78,28 @@ public class user_dao {
         }
 
         return result;
+    }
+
+    public Optional<user> get(org.wtaa.dto.user usr) {
+        return select()
+                .stream()
+                .filter(u ->
+                    u.name().equals(usr.name()) &&
+                    u.pass().equals(usr.password()))
+                .findAny();
+    }
+
+    public Optional<user> id(int id) {
+        return select()
+                .stream()
+                .filter(u -> u.id() == id)
+                .findAny();
+    }
+
+    public Optional<user> name(String name) {
+        return select()
+                .stream()
+                .filter(u -> u.name().equals(name))
+                .findAny();
     }
 }
