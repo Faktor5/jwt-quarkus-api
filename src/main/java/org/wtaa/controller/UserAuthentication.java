@@ -16,7 +16,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.wtaa.model.user;
+import org.wtaa.dto.user;
 import org.wtaa.service.AccountManager;
 import org.wtaa.service.Encoder;
 import org.wtaa.service.TokenExtractor;

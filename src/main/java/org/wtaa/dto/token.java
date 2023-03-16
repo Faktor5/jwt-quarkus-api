@@ -1,4 +1,4 @@
-package org.wtaa.model;
+package org.wtaa.dto;
 
 import java.util.List;
 import java.util.Map;

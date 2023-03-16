@@ -9,7 +9,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.core.SecurityContext;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.wtaa.model.token;
+import org.wtaa.dto.token;
 
 @RequestScoped
 public class TokenExtractor {

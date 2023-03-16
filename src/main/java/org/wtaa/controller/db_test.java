@@ -1,13 +1,13 @@
 package org.wtaa.controller;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.List;
+import java.util.Set;
 
 import javax.annotation.security.PermitAll;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -15,7 +15,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.wtaa.model.user;
+import org.wtaa.dao.user_dao;
+import org.wtaa.dto.user;
+import org.wtaa.persistance.context;
 
 import javax.ws.rs.core.MediaType;
 
@@ -26,33 +28,30 @@ public class db_test {
     @ConfigProperty(name = "quarkus.datasource.jdbc.url")
     String jdbc;
 
+    @Inject
+    context ctx;
+
     @GET
     @Path("/test")
     @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
-    public Response test() throws SQLException {
-        String sql = "SELECT id, name, pass FROM user";
-      
-        try (Connection conn = this.connect();
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sql)){
-            
-
-            // loop through the result set
-            var sb = new StringBuilder();
-            while (rs.next()) {
-                sb.append(
-                    rs.getInt("id") +  "\t" + 
-                    rs.getString("name") + "\t" +
-                    rs.getDouble("pass") + " ");
-                sb.append("\r\n");
-            }
-            return Response.ok(sb.toString()).build();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+    public Response test() throws Exception {
+        try
+        {
+            Connection                  conn    = ctx.getContext(jdbc);
+            user_dao                    dao     = new user_dao(conn);
+            Set <org.wtaa.domain.user>  users   = dao.select();
+            List<org.wtaa.dto.user>     data    = users.stream().map(user::of).toList();
+                                        return
+            Response                    .ok(data).build();
         }
-
-        return Response.ok("test failed").build();
+        catch (Exception ex)
+        {
+            ex          .printStackTrace();
+                        return 
+            Response    .ok("test failed")
+                        .build();
+        }
     }
 
     @PUT
@@ -60,57 +59,24 @@ public class db_test {
     @PermitAll
     @Produces(MediaType.APPLICATION_JSON)
     public Response test(user usr) throws SQLException {
-        int id = 0;
-        String sql1 = "SELECT MAX(id) FROM user";
-        
-        try (Connection conn = this.connect();
-        Statement stmt  = conn.createStatement();
-        ResultSet rs    = stmt.executeQuery(sql1)){
-            
-            // loop through the result set
-            while (rs.next()) {
-                id = rs.getInt("MAX(id)");
-            }
-            String sql2 = "INSERT INTO user(id, name, pass) VALUES(" + (id + 1) + ", '" + usr.name() + "', '" + usr.password() + "')";
-            stmt.executeUpdate(sql2);
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+        try
+        {
+            Connection                  conn    = ctx.getContext(jdbc);
+            user_dao                    dao     = new user_dao(conn);
+            boolean                     success = dao.insert(usr);
+            if (!success)               throw
+                                        new Exception("insert failed");
+            Set <org.wtaa.domain.user>  users   = dao.select();
+            List<org.wtaa.dto.user>     data    = users.stream().map(user::of).toList();
+                                        return
+            Response                    .ok(data).build();
         }
-
-        if (!(id > 0)) {
-            return Response.ok("test failed").build();
+        catch (Exception ex)
+        {
+            ex          .printStackTrace();
+                        return 
+            Response    .ok("test failed")
+                        .build();
         }
-
-        try (Connection conn = this.connect();
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery("SELECT id, name, pass FROM user")){
-            
-            // loop through the result set
-            var sb = new StringBuilder();
-            while (rs.next()) {
-                sb.append(
-                    rs.getInt("id") +  "\t" + 
-                    rs.getString("name") + "\t" +
-                    rs.getDouble("pass") + " ");
-                sb.append("\r\n");
-                
-            }
-            return Response.ok(sb.toString()).build();
-            
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        
-
-        return Response.ok("test failed completly").build();
-    }
-
-    private Connection connect() throws SQLException {
-        Connection conn;
-        // db parameters
-        String url = jdbc;
-        // create a connection to the database
-        conn = DriverManager.getConnection(url);
-        return conn;
     }
 }

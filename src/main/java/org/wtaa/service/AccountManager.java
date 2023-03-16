@@ -9,7 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
-import org.wtaa.model.user;
+
+import org.wtaa.dto.user;
 
 @ApplicationScoped
 public class AccountManager {
