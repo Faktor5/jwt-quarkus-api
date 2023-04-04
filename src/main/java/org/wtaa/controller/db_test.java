@@ -38,8 +38,8 @@ public class db_test {
     context ctx;
 
     @GET
-    @Path("/test")
-    @PermitAll
+    @Path("/secret")
+    @RolesAllowed({ "admin" })
     @Produces(MediaType.APPLICATION_JSON)
     public Response test() throws Exception {
         try {
@@ -56,10 +56,10 @@ public class db_test {
     }
 
     @GET
-    @Path("/names")
+    @Path("/inofficial")
     @RolesAllowed({ "qualified" })
     @Produces(MediaType.APPLICATION_JSON)
-    public Response test(user usr) throws SQLException {
+    public Response ressourcing() throws SQLException {
         try {
             Connection conn = ctx.getContext(jdbc);
             user_dao dao = new user_dao(conn);
@@ -67,6 +67,27 @@ public class db_test {
 
             return Response
                 .ok(names)
+                .build();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return Response.ok("test failed")
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/official")
+    @PermitAll
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response open_for_all() throws SQLException {
+        try {
+            Connection conn = ctx.getContext(jdbc);
+            user_dao dao = new user_dao(conn);
+            List<String> names = dao.names();
+
+            return Response
+                .ok(names.size())
                 .build();
 
         } catch (Exception ex) {
