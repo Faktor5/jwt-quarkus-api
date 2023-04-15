@@ -3,6 +3,7 @@ package org.wtaa.controller;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -87,7 +88,7 @@ public class db_test {
             List<String> names = dao.names();
 
             return Response
-                .ok(names.size())
+                .ok(Map.of("Menge von User",names.size()))
                 .build();
 
         } catch (Exception ex) {
